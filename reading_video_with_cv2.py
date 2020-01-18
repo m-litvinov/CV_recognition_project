@@ -1,5 +1,4 @@
 import cv2 as cv
-import numpy
 
 cap = cv.VideoCapture(0)
 
@@ -22,7 +21,7 @@ while True:
 
     grey = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
 
-    out.write(grey) # Not working
+    out.write(grey)  # Not working
 
     cv.imshow("webcam", grey)
     if cv.waitKey(1) == ord('q'):

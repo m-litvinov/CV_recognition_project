@@ -1,17 +1,28 @@
 import cv2 as cv
 # import numpy as np
 
-img = cv.imread("face.jpg", -1)
+img = cv.imread("face.jpg", 0)
 
 # Для детектирования лиц используем каскады Хаара
 cascadePath = "haarcascade_frontalface_default.xml"
 faceCascade = cv.CascadeClassifier(cascadePath)
 
-# Для распознавания используем локальные бинарные шаблоны
-recognizer = cv.createLBPHFaceRecognizer(1, 8, 8, 8, 123)
+images = []
 
+faces = faceCascade.detectMultiScale(
+    img, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+
+# for (x, y, w, h) in faces:
+#     images.append(img[y: y + h, x: x + w])
+
+for (x, y, w, h) in faces:
+    img = cv.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
+
+# В окне показываем изображение
 cv.namedWindow('face', cv.WINDOW_NORMAL)
-cv.imshow('face', img)
+# cv.imshow("face", img[y: y + h, x: x + w])
+cv.imshow("face", img)
+
 k = 0
 while (k != 27) & (k != ord('s')):
     k = cv.waitKey(0)  # записываем значение нажатой клавиши
