@@ -1,28 +1,30 @@
 import cv2 as cv
 import numpy as np
 import os
+from PIL import Image
 
 
 def get_images(path):
     image_paths = [
         os.path.join(path, f) for f in os.listdir(path)
-        if not f.endswith('_happy')]
+        if not f.endswith('.happy')]
 
     images = []
     labels = []
 
     for image_path in image_paths:
-        img = cv.imread(image_path, 0)
-        # subject = image_path.split("_")[0]
-        subject_number = 0
+        gray = Image.open(image_path).convert('L')
+        img = np.array(gray, 'uint8')
+        # img = cv.imread(image_path, 0)
 
+        subject_number = int(
+            os.path.split(image_path)[1].split(".")[0].replace("subject", ""))
         faces = faceCascade.detectMultiScale(
             img, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30)
         )
 
         for (x, y, w, h) in faces:
             images.append(img[y: y + h, x: x + w])
-            # labels.append(subject)
             labels.append(subject_number)
 
             # cv.imshow("face", img[y: y + h, x: x + w])
@@ -33,17 +35,19 @@ def get_images(path):
 cascadePath = "haarcascade_frontalface_default.xml"
 faceCascade = cv.CascadeClassifier(cascadePath)
 
-recognizer = cv.face.LBPHFaceRecognizer_create()
+recognizer = cv.face.LBPHFaceRecognizer_create(1, 8, 8, 8, 123)
 
-path = './face'
+path = './yalefaces'
 images, labels = get_images(path)
 cv.destroyAllWindows()
-# TODO: Train model on larger dataset
-print("Training model")
-recognizer.train(images, np.array(labels))
 
+print("Training model")
+recognizer.update(images, np.array(labels))
+
+subject_name = ""
+
+print("Let see you now")
 cap = cv.VideoCapture(0)
-subject_list = ['mike']
 
 while True:
     ret, frame = cap.read()
@@ -52,23 +56,27 @@ while True:
     ret = cap.set(cv.CAP_PROP_FRAME_WIDTH, 240)
 
     frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-
+    # trying detect faces on frame
     faces = faceCascade.detectMultiScale(
         frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
     for (x, y, w, h) in faces:
         subject_predicted, conf = recognizer.predict(frame[y: y + h, x: x + w])
-
-        subject_actual = 0
+        # dividing known and unknown faces
+        subject_actual = 16
+        if subject_predicted == 16:
+            subject_name = "Mike"
+        else:
+            subject_name = "Unknown"
 
         img_font = cv.FONT_HERSHEY_SIMPLEX
         if subject_actual == subject_predicted:
-            print(f"{subject_list[subject_actual]} is correctly recognized \
+            print(f"{subject_name} is correctly recognized \
 with confidence {conf}")
 
             frame = cv.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
             cv.putText(
-                frame, subject_list[subject_predicted], (x, y-10),
+                frame, subject_name, (x, y-10),
                 img_font, 2, (255, 0, 0), 2, cv.LINE_AA)
 
         else:
@@ -76,7 +84,7 @@ with confidence {conf}")
 as {subject_predicted}")
             frame = cv.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
             cv.putText(
-                frame, "unknown", (x, y-20),
+                frame, subject_name, (x, y-20),
                 img_font, 2, (255, 0, 0), 2, cv.LINE_AA)
 
     cv.imshow("face", frame)
