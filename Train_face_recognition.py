@@ -42,7 +42,7 @@ images, labels = get_images(path)
 cv.destroyAllWindows()
 
 print("Training model")
-recognizer.update(images, np.array(labels))
+recognizer.train(images, np.array(labels))
 
 subject_name = ""
 
